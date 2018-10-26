@@ -130,28 +130,30 @@ class ModelHagan:
         # https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.optimize.root.html#scipy.optimize.root
         '''
         texp = self.texp if(texp is None) else texp
+        if isinstance(strike3, (int, float)):
+            strike3 = [strike3]
+        
+        if isinstance(price_or_vol3, (int, float)):
+            price_or_vol3 = [price_or_vol3]
+        
         if(is_vol):
             vol = price_or_vol3
         else:
-            vol = [self.bsm_model.impvol(price_or_vol3[i], strike3[i], spot, texp, cp_sign=cp_sign) for i in range(3)]
-
-        def FOC(x):
-            # set constraints to the parameters
-            sigma = np.sqrt(x[0]**2)
-            alpha = np.sqrt(x[1]**2)
+            vol = [self.bsm_model.impvol(price_or_vol3[i], strike3[i], spot, texp, cp_sign) for i in range(len(strike3))]
+        
+        def func(x):  # x is a vector of 3 scallers for sigma, alpha, rho respectively.
+            sigma = np.abs(x[0])
+            alpha = np.abs(x[1])
             rho = 2*x[2]/(1+x[2]**2)
-            bsm_vol1 = bsm_vol(strike3[0], spot, texp, sigma, alpha=alpha, rho=rho) - vol[0]
-            bsm_vol2 = bsm_vol(strike3[1], spot, texp, sigma, alpha=alpha, rho=rho) - vol[1]
-            bsm_vol3 = bsm_vol(strike3[2], spot, texp, sigma, alpha=alpha, rho=rho) - vol[2]
-            return [bsm_vol1,bsm_vol2,bsm_vol3]
-            
-        sol_root = sopt.root(FOC,np.array([0,0,0]))
-        solution_x = sol_root.x
+            return [ bsm_vol(strike3[i], spot, texp, sigma, alpha, rho) - vol[i] for i in range(len(strike3)) ]
+        
+        sol_root = sopt.root(func, np.zeros(len(strike3)) )
+        solution = sol_root.x
 
-        sigma = np.sqrt(solution_x[0]**2)
-        alpha = np.sqrt(solution_x[1]**2)
-        rho = 2*solution_x[2]/(1+solution_x[2]**2)
-
+        sigma = np.abs(solution[0])
+        alpha = np.abs(solution[1])
+        rho = 2 * solution[2] / (1 + solution[2]**2)
+        
         return sigma, alpha, rho # sigma, alpha, rho
 
 '''
@@ -203,6 +205,7 @@ class ModelNormalHagan:
         # https://docs.scipy.org/doc/scipy-0.18.1/reference/generated/scipy.optimize.root.html#scipy.optimize.root
         '''
         texp = self.texp if(texp is None) else texp
+        
         if(is_vol):
             vol = price_or_vol3
         else:
@@ -451,10 +454,10 @@ class ModelBsmCondMC:
         texp = self.texp if texp is None else texp
         sigma = self.sigma if sigma is None else sigma
         
-        # new_S0,new_sigma = self.generate_S0_Sigma(strike, spot, texp=texp, sigma=sigma, cp_sign=cp_sign)
-        # mc_price = [np.mean(self.bsm_model.price(strike[i], new_S0[i], texp, new_sigma[i], cp_sign)) for i in range(strike.size)]
-        # return mc_price
-        # np.random.seed(12345)
+        new_S0,new_sigma = self.generate_S0_Sigma(strike, spot, texp=texp, sigma=sigma, cp_sign=cp_sign)
+        mc_price = [np.mean(self.bsm_model.price(strike[i], new_S0[i], texp, new_sigma[i], cp_sign)) for i in range(strike.size)]
+        return mc_price
+        np.random.seed(12345)
         n_step = self.time_steps
         n_sample = self.n_samples
         
