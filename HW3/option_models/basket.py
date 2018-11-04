@@ -7,7 +7,7 @@ Created on Tue Sep 19 22:56:58 2017
 import numpy as np
 import scipy.stats as ss
 from .bsm import bsm_price
-from .normal import normal_price
+from .normal import normal_formula
 
 def basket_check_args(spot, vol, corr_m, weights):
     '''
@@ -41,7 +41,7 @@ def basket_price_mc_cv(
     ##  price2 = 0
     np.random.set_state(rand_st)
     price2 = basket_price_mc(
-        strike, spot, vol, weights, texp, cor_m,
+        strike, spot, spot*vol, weights, texp, cor_m,
         intr, divr, cp_sign, False, n_samples)
     
     ''' 
@@ -53,9 +53,8 @@ def basket_price_mc_cv(
     '''
     ##  price3 = 0
     
-     price3 = basket_price_norm_analytic(
-        strike, spot, vol, weights, texp, cor_m, intr, divr, cp_sign)
-     
+    price3 = basket_price_norm_analytic(
+        strike, spot, spot*vol, weights, texp, cor_m, intr, divr, cp_sign)
      
     # return two prices: without and with CV
     return [price1, price1 - (price2 - price3)] 
