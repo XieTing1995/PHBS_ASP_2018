@@ -156,9 +156,6 @@ class ModelHagan:
         sol_root = sopt.root(func, np.zeros(len(strike3)) )
         solution = sol_root.x
 
-        sigma = np.sqrt(solution_x[0]**2)
-        alpha = np.sqrt(solution_x[1]**2)
-        rho = 2*solution_x[2]/(1+solution_x[2]**2)
         sigma = np.abs(solution[0])
         alpha = np.abs(solution[1])
         rho = 2 * solution[2] / (1 + solution[2]**2)
@@ -435,25 +432,7 @@ class ModelBsmCondMC:
             self.sigma = sigma
         
         return sigma
-<<<<<<< HEAD
 
-    # def generate_S0_Sigma(self, strike, spot, texp=None, sigma=None, cp_sign=1):
-    #     texp = self.texp if texp is None else texp
-    #     sigma = self.sigma if sigma is None else sigma
-    #     np.random.seed(12345)
-    #     z = np.random.normal(size = (strike.size, self.time_steps,self.n_samples))
-    #     delta_t = texp/self.time_steps
-
-    #     sigma_path = np.exp(-0.5* self.alpha**2 * delta_t + self.alpha * np.sqrt(delta_t) * z)
-
-    #     delta_sigma = sigma * np.cumprod(sigma_path, axis=1)
-    #     sigma_T = delta_sigma[:,-1]
-    #     new_S0 = spot+self.rho/self.alpha*(sigma_T-sigma)
-    #     I_T = np.sum(delta_sigma*delta_t,axis=1)
-    #     new_sigma = np.sqrt((1-(self.rho**2)*I_T/texp))
-    #     return new_S0,new_sigma
-=======
-#################################################################################
     def generate_S0_Sigma(self, strike, spot, texp=None, sigma=None, cp_sign=1):
         texp = self.texp if texp is None else texp
         sigma = self.sigma if sigma is None else sigma
